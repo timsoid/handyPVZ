@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">handyPVZ</string>
+    <string name="hint_status">Войдите в Ozon и откройте раздел «Мои заказы».</string>
+    <string name="btn_fetch">Получить код</string>
+    <string name="btn_orders">Мои заказы</string>
+    <string name="btn_refresh">Обновить</string>
+    <string name="btn_logout">Выйти из профиля OZON</string>
+    <string name="logout_dialog_title">Выйти из профиля OZON?</string>
+    <string name="logout_dialog_message">Сессия Ozon будет очищена, потребуется войти заново. Само приложение не закроется.</string>
+    <string name="logout_dialog_confirm">Выйти</string>
+    <string name="logout_dialog_cancel">Отмена</string>
+    <string name="status_session_cleared">Сессия очищена. Войдите в Ozon заново</string>
+    <string name="notif_access_desc">Чтобы узнавать о поступлении посылки, разрешите handyPVZ читать уведомления Ozon.</string>
+    <string name="notif_access_btn">Разрешить доступ к уведомлениям</string>
+    <string name="status_refreshing">Обновляю…</string>
+    <string name="result_missing">Код не найден. Войдите в Ozon и нажмите «Обновить»</string>
+    <string name="status_no_code">Кода нет — войдите в Ozon и нажмите «Обновить»</string>
+    <string name="status_code">Код: %1$s · от %2$s</string>
+    <string name="status_stale"> · УСТАРЕЛ</string>
+    <string name="notif_channel">Проблемы handyPVZ</string>
+    <string name="notif_channel_desc">Уведомления при проблемах с обновлением кода</string>
+    <string name="notif_session_title">Сессия Ozon истекла</string>
+    <string name="notif_session_text">Войди в Ozon заново</string>
+    <string name="notif_fail_title">Не удалось обновить код</string>
+    <string name="notif_fail_text">Открой приложение и проверь</string>
+    <string name="notif_order_title">Заказ в ПВЗ</string>
+    <string name="notif_order_text">Штрих-код получен</string>
+    <string name="status_no_orders">На данный момент нет посылок для выдачи</string>
+    <string name="battery_desc">Разрешите фоновую работу, чтобы приложение само следило за заказом и отправляло код на часы. Проверки редкие и почти не расходуют батарею.</string>
+    <string name="battery_btn">Разрешить фоновую работу</string>
+    <string name="btn_donate">Поддержать проект</string>
+    <string name="btn_help">Справка</string>
+    <string name="btn_install_watch">Установить на часы</string>
+    <string name="help_title">Справка</string>
+    <string name="help_close">Закрыть</string>
+    <string name="watch_title">Установка на часы</string>
+    <string name="watch_subtitle">Телефон и часы должны быть в одной Wi-Fi сети. Устанавливается приложение для Wear OS (отладка по Wi-Fi).</string>
+    <string name="watch_steps"><![CDATA[<b>1.</b> На часах: Настройки → О часах → Сведения о ПО → 7 раз нажмите на «Номер сборки» (если режим разработчика уже включён, пропустите).<br><br>
+<b>2.</b> В разделе «Для разработчиков» (или «Параметры разработчика») включите «Отладка по ADB» и «Отладка по Wi-Fi» (или «Беспроводная отладка»).<br><br>
+<b>3.</b> Откройте «Отладка по Wi-Fi» («Беспроводная отладка») и нажмите «Подключить новое устройство»: на часах появятся IP-адрес с портом и 6-значный код. Оставьте этот экран открытым.<br><br>
+<b>4.</b> Введите код ниже и нажмите «Установить». IP-адрес и порт найдутся сами; если нет, впишите их вручную.]]></string>
+    <string name="watch_field_pair_host">IP-адрес и порт сопряжения</string>
+    <string name="watch_field_pair_host_helper">Например 192.168.1.50:37215</string>
+    <string name="watch_field_code">Код сопряжения</string>
+    <string name="watch_field_code_helper">6 цифр с экрана часов. Если часы уже сопрягались, оставьте пустым.</string>
+    <string name="watch_field_connect_port">Порт подключения (необязательно)</string>
+    <string name="watch_field_connect_port_helper">Нужен, только если порт не нашёлся сам: смотрите на экране «Отладка по Wi-Fi» («Беспроводная отладка»).</string>
+    <string name="watch_found">Часы найдены в сети: адрес подставлен</string>
+    <string name="watch_searching">Ищу часы в сети…</string>
+    <string name="watch_install">Установить</string>
+    <string name="watch_retry">Повторить</string>
+    <string name="watch_step_pairing">Сопряжение…</string>
+    <string name="watch_step_connecting">Подключение к часам…</string>
+    <string name="watch_step_installing">Установка приложения… %1$d%%</string>
+    <string name="watch_step_done">Готово! Откройте приложение handyPVZ на часах и нажмите «Обновить» на телефоне.</string>
+    <string name="watch_error_host">Укажите IP-адрес часов (например 192.168.1.50:37215).</string>
+    <string name="watch_error_code">Код сопряжения должен состоять из 6 цифр.</string>
+    <string name="watch_error_port">Порт подключения указан неверно.</string>
+    <string name="watch_error_unexpected">Что-то пошло не так: %1$s</string>
+    <string name="watch_footer"><![CDATA[Если не получилось установить этим способом, заходите в нашу <a href="https://t.me/+jZOjtFSWPWpiODYy">Telegram-группу</a>: там есть альтернативная инструкция.]]></string>
+    <string name="status_login_required">Войдите в профиль Ozon, чтобы увидеть посылки для выдачи</string>
+    <string name="login_note">Мы не храним и не отправляем данные для входа: вы входите на обычной странице Ozon выше, как в браузере на телефоне.</string>
+    <string name="help_how_title">Как это работает</string>
+    <string name="help_how_text">Войдите в Ozon прямо в приложении. Когда посылка готова к выдаче, приложение находит в заказах код получения и превращает его в штрихкод, а затем отправляет на часы с Wear OS: покажите их на пункте выдачи.\n\nКод обновляется по уведомлению от Ozon, по кнопке «Обновить» и при открытии приложения на часах. Он меняется каждый день в 00:00 МСК: если на часах отметка «УСТАРЕЛ», откройте приложение на часах или нажмите «Обновить».</string>
+    <string name="help_important_title">Важно: уведомления Ozon</string>
+    <string name="help_important_text">В приложении Ozon должны быть включены уведомления о новых посылках. Тогда handyPVZ сам подхватит код, как только посылка придёт. Так сделано намеренно: приложение не опрашивает Ozon постоянно в фоне, ведь такая активность выглядит подозрительно, и Ozon может закрыть вашу сессию.</string>
+    <string name="help_privacy_title">Ваши данные</string>
+    <string name="help_privacy_text">Код и данные заказов остаются на ваших устройствах. Логин и пароль приложение не видит: вход выполняется на странице Ozon. Для обезличенной статистики используется Яндекс AppMetrica.</string>
+    <string name="help_link_github">GitHub</string>
+    <string name="help_link_telegram">Telegram</string>
+    <string name="help_links_caption">GitHub: новые версии. Telegram: вопросы, баги и предложения.</string>
+</resources>

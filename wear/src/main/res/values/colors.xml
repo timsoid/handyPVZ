@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_dark">#0B1020</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_muted">#9FB4D9</color>
+    <color name="status_ok">#7FD1A0</color>
+    <color name="status_warn">#FFB74D</color>
+</resources>

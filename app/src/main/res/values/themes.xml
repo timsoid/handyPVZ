@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.HandyPVZ" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand</item>
+        <item name="android:statusBarColor">@color/brand</item>
+    </style>
+
+    <!-- Primary accent action -->
+    <style name="Widget.HandyPVZ.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:minHeight">52dp</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="backgroundTint">@color/brand</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="iconTint">#FFFFFF</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconSize">20dp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <!-- Secondary action: dark gray plate -->
+    <style name="Widget.HandyPVZ.Button.Secondary" parent="Widget.HandyPVZ.Button.Primary">
+        <item name="backgroundTint">@color/surface_variant</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Tertiary / helper actions (permissions) -->
+    <style name="Widget.HandyPVZ.Button.Tonal" parent="Widget.HandyPVZ.Button.Secondary">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="cornerRadius">14dp</item>
+    </style>
+
+    <!-- Compact helper buttons under the main actions -->
+    <style name="Widget.HandyPVZ.Button.Small" parent="Widget.HandyPVZ.Button.Secondary">
+        <item name="android:minHeight">44dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="iconSize">18dp</item>
+        <item name="iconPadding">6dp</item>
+    </style>
+
+    <!-- Destructive: quiet text button with soft red tint -->
+    <style name="Widget.HandyPVZ.Button.Logout" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">44dp</item>
+        <item name="android:textColor">@color/logout_text</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="textAllCaps">false</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="icon">@drawable/ic_logout</item>
+        <item name="iconTint">@color/logout_text</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconSize">18dp</item>
+        <item name="rippleColor">@color/logout_ripple</item>
+    </style>
+
+    <!-- Donate: warm amber accent on a dark tinted plate -->
+    <style name="Widget.HandyPVZ.Button.Donate" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textColor">@color/donate_accent</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="textAllCaps">false</item>
+        <item name="backgroundTint">@color/donate_bg</item>
+        <item name="strokeColor">@color/donate_stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="iconTint">@color/donate_accent</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconSize">18dp</item>
+        <item name="rippleColor">@color/donate_ripple</item>
+    </style>
+
+    <!-- Dark dialogs matching the bottom panel -->
+    <style name="ThemeOverlay.HandyPVZ.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurfaceContainerHigh">@color/surface_variant</item>
+        <item name="colorSurface">@color/surface_variant</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorPrimary">@color/link_blue</item>
+        <item name="android:textColorLink">@color/link_blue</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.HandyPVZ.Dialog</item>
+    </style>
+
+    <style name="ShapeAppearance.HandyPVZ.Dialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <!-- Dark bottom sheet (watch install) -->
+    <style name="ThemeOverlay.HandyPVZ.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="colorSurface">@color/panel_bg</item>
+        <item name="colorSurfaceContainerLow">@color/panel_bg</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_variant</item>
+        <item name="colorOnSurface">#FFFFFF</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_muted</item>
+        <item name="colorPrimary">@color/link_blue</item>
+        <item name="colorOutline">#4A5163</item>
+        <item name="colorOutlineVariant">@color/panel_divider</item>
+        <item name="colorError">@color/logout_text</item>
+        <item name="android:textColorLink">@color/link_blue</item>
+        <item name="android:navigationBarColor">@color/panel_bg</item>
+    </style>
+
+    <!-- Help sheet cards -->
+    <style name="Widget.HandyPVZ.HelpCard" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/bg_status_badge</item>
+        <item name="android:padding">14dp</item>
+    </style>
+
+    <style name="Widget.HandyPVZ.HelpCardTitle" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="Widget.HandyPVZ.HelpCardText" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:lineSpacingMultiplier">1.05</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+</resources>

@@ -1,0 +1,60 @@
+# ---- Secrets / signing (NEVER commit) ----
+keystore.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.der
+*.crt
+*.csr
+secrets.properties
+.env
+.env.*
+google-services.json
+service-account*.json
+# local machine config (sdk path, AppMetrica API key, ...)
+local.properties
+
+# ---- Build output ----
+build/
+**/build/
+.gradle/
+.kotlin/
+captures/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.hprof
+output-metadata.json
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+.fleet/
+
+# ---- OS junk ----
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# ---- Logs / temp ----
+*.log
+*.tmp
+*.bak
+*.swp
+hs_err_pid*
+
+# ---- Private notes & personal data ----
+# STATUS.md is a private working journal (device serials, LAN IPs, Ozon user id);
+# the public project description lives in AGENTS.md / README.md.
+STATUS.md
+# real watch screenshot contains a live pickup barcode with the owner's Ozon id
+design/watch_screen.png
+# store-submission assets, not part of the source
+RuStore/

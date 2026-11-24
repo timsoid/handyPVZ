@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">handyPVZ</string>
+    <string name="wear_no_code">Нет кода. Откройте handyPVZ на телефоне</string>
+    <string name="wear_no_orders">Нет посылок для выдачи</string>
+    <string name="wear_stale">УСТАРЕЛ</string>
+</resources>

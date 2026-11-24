@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand">#005BFF</color>
+    <color name="background">#FFFFFF</color>
+
+    <!-- Bottom panel (dark) -->
+    <color name="panel_bg">#16181D</color>
+    <color name="panel_divider">#1AFFFFFF</color>
+    <color name="surface_variant">#232730</color>
+    <color name="on_surface_variant">#E2E8F0</color>
+    <color name="on_surface_muted">#94A3B8</color>
+    <color name="logout_text">#F28B82</color>
+    <color name="logout_ripple">#33F28B82</color>
+
+    <color name="donate_accent">#FFC247</color>
+    <color name="donate_bg">#2A2314</color>
+    <color name="donate_stroke">#66FFC247</color>
+    <color name="donate_ripple">#33FFC247</color>
+    <color name="link_blue">#6FA0FF</color>
+
+    <!-- Status text colors: used on the dark badge, so lighter tints -->
+    <color name="status_ok">#4ADE80</color>
+    <color name="status_err">#FF8A80</color>
+    <color name="status_warn">#FFB74D</color>
+    <color name="status_idle">#E2E8F0</color>
+</resources>
