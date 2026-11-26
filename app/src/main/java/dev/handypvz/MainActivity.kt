@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.view.View
 import android.webkit.CookieManager
@@ -25,6 +26,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.text.HtmlCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -32,6 +34,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButtonToggleGroup
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -42,12 +45,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var statusIcon: ImageView
     private lateinit var loginNote: View
+    private lateinit var loginWarning: View
     private var refreshing = false
     private lateinit var resultText: TextView
     private lateinit var batteryDesc: TextView
     private lateinit var batteryButton: Button
     private lateinit var notifDesc: TextView
     private lateinit var notifButton: Button
+    private lateinit var panelController: PanelController
+    private lateinit var watchVersionView: WatchVersionStatusView
+    private lateinit var watchConnectionView: WatchConnectionView
+    private lateinit var updateBanner: TextView
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,9 +66,15 @@ class MainActivity : AppCompatActivity() {
         resultText = findViewById(R.id.resultText)
         statusIcon = findViewById(R.id.statusIcon)
         loginNote = findViewById(R.id.loginNote)
+        loginWarning = findViewById(R.id.loginWarning)
         batteryDesc = findViewById(R.id.batteryDesc)
         batteryButton = findViewById(R.id.batteryButton)
         notifDesc = findViewById(R.id.notifDesc)
+        notifDesc.movementMethod = LinkMovementMethod.getInstance()
+        notifDesc.text = Links.routeLinks(
+            this,
+            HtmlCompat.fromHtml(getString(R.string.notif_access_desc), HtmlCompat.FROM_HTML_MODE_LEGACY)
+        )
         notifButton = findViewById(R.id.notifButton)
         val ordersButton = findViewById<Button>(R.id.ordersButton)
         val refreshButton = findViewById<Button>(R.id.refreshButton)
@@ -68,6 +82,28 @@ class MainActivity : AppCompatActivity() {
         val donateButton = findViewById<Button>(R.id.donateButton)
         val helpButton = findViewById<Button>(R.id.helpButton)
         val installWatchButton = findViewById<Button>(R.id.installWatchButton)
+        panelController = PanelController(this)
+        watchVersionView = WatchVersionStatusView(
+            this,
+            findViewById(R.id.watchVersionStatus),
+            onlyWhenUpdateRequired = true
+        ) {
+            panelController.setWatchUpdateRequired(it)
+        }.also { it.start() }
+        watchConnectionView = WatchConnectionView(this, findViewById(R.id.watchConnectionStatus)).also { it.start() }
+        val tabs = findViewById<MaterialButtonToggleGroup>(R.id.marketplaceTabs)
+        val tabsTopPadding = tabs.paddingTop
+        ViewCompat.setOnApplyWindowInsetsListener(tabs) { view, insets ->
+            view.updatePadding(top = tabsTopPadding + insets.getInsets(WindowInsetsCompat.Type.systemBars()).top)
+            insets
+        }
+        tabs.check(R.id.tabOzon)
+        tabs.addOnButtonCheckedListener { _, buttonId, checked ->
+            if (buttonId == R.id.tabWb && checked) {
+                startActivity(Intent(this, WbActivity::class.java))
+                tabs.check(R.id.tabOzon)
+            }
+        }
 
         // Keep the panel content clear of the gesture/navigation bar
         val bottomPanel = findViewById<View>(R.id.bottomPanel)
@@ -132,7 +168,6 @@ class MainActivity : AppCompatActivity() {
                 .setNegativeButton(R.string.logout_dialog_cancel, null)
                 .setPositiveButton(R.string.logout_dialog_confirm) { _, _ ->
                     clearSession()
-                    webView.loadUrl(ORDER_LIST_URL)
                 }
                 .show()
         }
@@ -140,6 +175,8 @@ class MainActivity : AppCompatActivity() {
         donateButton.setOnClickListener { Links.open(this, DONATE_URL) }
         helpButton.setOnClickListener { showHelp() }
         installWatchButton.setOnClickListener { WatchInstallSheet(this).show() }
+        updateBanner = findViewById(R.id.updateBanner)
+        updateBanner.setOnClickListener { (updateBanner.tag as? String)?.let { Links.open(this, it) } }
 
         refreshButton.setOnClickListener {
             refreshing = true
@@ -156,10 +193,10 @@ class MainActivity : AppCompatActivity() {
                         WearSync.push(this@MainActivity, result.code, today)
                         showState(StoredCode(result.code, today), hasOrder = true, loggedIn = true)
                     }
-                    is FetchResult.NotFound -> {
-                        CodeStore.clearOrder(this@MainActivity)
-                        resultText.setTextColor(getColor(R.color.status_idle))
-                        resultText.text = getString(R.string.status_no_orders)
+                    is FetchResult.CodeUnavailable -> {
+                        if (CodeStore.markOzonUnavailable(this@MainActivity)) WearSync.pushSnapshot(this@MainActivity)
+                        resultText.setTextColor(getColor(R.color.status_warn))
+                        resultText.text = getString(R.string.status_code_unavailable)
                     }
                     is FetchResult.SessionExpired -> {
                         showLoginRequired()
@@ -181,6 +218,20 @@ class MainActivity : AppCompatActivity() {
         refreshStoredStatus()
         updateBatteryUi()
         updateNotificationUi()
+        panelController.sync()
+        WearSync.requestWatchVersion(this)
+        watchConnectionView.refresh()
+        checkForUpdate()
+    }
+
+    private fun checkForUpdate() {
+        lifecycleScope.launch {
+            UpdateChecker.check(this@MainActivity)?.let { update ->
+                updateBanner.text = getString(R.string.update_available, update.version)
+                updateBanner.tag = update.url
+                updateBanner.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun showHelp() {
@@ -188,6 +239,8 @@ class MainActivity : AppCompatActivity() {
         val content = layoutInflater.inflate(R.layout.sheet_help, null)
         content.findViewById<View>(R.id.helpGithub).setOnClickListener { Links.open(this, GITHUB_URL) }
         content.findViewById<View>(R.id.helpTelegram).setOnClickListener { Links.open(this, TELEGRAM_GROUP_URL) }
+        content.findViewById<TextView>(R.id.helpVersion).text =
+            getString(R.string.help_version, BuildConfig.VERSION_NAME)
         dialog.setContentView(content)
         dialog.behavior.apply {
             state = BottomSheetBehavior.STATE_EXPANDED
@@ -197,13 +250,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun clearSession() {
-        CookieManager.getInstance().removeAllCookies { }
-        CookieManager.getInstance().flush()
-        webView.clearHistory()
-        webView.clearCache(true)
-        WebStorage.getInstance().deleteAllData()
-        resultText.setTextColor(getColor(R.color.status_warn))
-        resultText.text = getString(R.string.status_session_cleared)
+        webView.stopLoading()
+        CookieManager.getInstance().removeAllCookies {
+            CookieManager.getInstance().flush()
+            webView.clearHistory()
+            webView.clearCache(true)
+            WebStorage.getInstance().deleteAllData()
+            lifecycleScope.launch {
+                CodeStore.clearOrder(this@MainActivity)
+                WearSync.pushNoCode(this@MainActivity)
+                resultText.setTextColor(getColor(R.color.status_warn))
+                resultText.text = getString(R.string.status_session_cleared)
+                webView.loadUrl(ORDER_LIST_URL)
+            }
+        }
     }
 
     private fun isBatteryExempt(): Boolean {
@@ -230,23 +290,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun refreshStoredStatus() {
         lifecycleScope.launch {
-            val stored = CodeStore.get(this@MainActivity)
-            val hasOrder = CodeStore.getHasOrder(this@MainActivity)
-            showState(stored, hasOrder)
-            if (stored != null && hasOrder) {
-                WearSync.push(this@MainActivity, stored.code, stored.epochDay)
+            val snapshot = CodeStore.snapshot(this@MainActivity)
+            showState(snapshot.ozon, snapshot.ozonHasOrder, ozonState = snapshot.ozonState)
+            if (snapshot.ozon != null && snapshot.ozonHasOrder) {
+                WearSync.push(this@MainActivity, snapshot.ozon.code, snapshot.ozon.epochDay)
+            } else if (snapshot.ozonState == "no_order") {
+                WearSync.pushNoCode(this@MainActivity)
+            } else {
+                WearSync.pushSnapshot(this@MainActivity)
             }
         }
     }
 
     private fun renderStoredStatus() {
         lifecycleScope.launch {
-            showState(CodeStore.get(this@MainActivity), CodeStore.getHasOrder(this@MainActivity))
+            val snapshot = CodeStore.snapshot(this@MainActivity)
+            showState(snapshot.ozon, snapshot.ozonHasOrder, ozonState = snapshot.ozonState)
         }
     }
 
     private fun setLoginRequired(required: Boolean) {
         loginNote.visibility = if (required) View.VISIBLE else View.GONE
+        loginWarning.visibility = if (required) View.VISIBLE else View.GONE
         statusIcon.setImageResource(if (required) R.drawable.ic_account else R.drawable.ic_box)
     }
 
@@ -259,7 +324,8 @@ class MainActivity : AppCompatActivity() {
     private fun showState(
         stored: StoredCode?,
         hasOrder: Boolean,
-        loggedIn: Boolean = OzonAuth.isLoggedIn()
+        loggedIn: Boolean = OzonAuth.isLoggedIn(),
+        ozonState: String = if (hasOrder) "ready" else "unknown"
     ) {
         if (!loggedIn) {
             showLoginRequired()
@@ -273,7 +339,7 @@ class MainActivity : AppCompatActivity() {
         }
         if (!hasOrder) {
             resultText.setTextColor(getColor(R.color.status_idle))
-            resultText.text = getString(R.string.status_no_orders)
+            resultText.text = getString(if (ozonState == "no_order") R.string.status_no_orders else R.string.status_code_unavailable)
             return
         }
         val date = LocalDate.ofEpochDay(stored.epochDay)
@@ -317,6 +383,12 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         webView.saveState(outState)
+    }
+
+    override fun onDestroy() {
+        watchVersionView.stop()
+        watchConnectionView.stop()
+        super.onDestroy()
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {

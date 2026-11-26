@@ -4,18 +4,38 @@
     <string name="hint_status">Войдите в Ozon и откройте раздел «Мои заказы».</string>
     <string name="btn_fetch">Получить код</string>
     <string name="btn_orders">Мои заказы</string>
-    <string name="btn_refresh">Обновить</string>
+    <string name="btn_refresh">Обновить страницу</string>
+    <string name="panel_collapse">Свернуть панель</string>
+    <string name="panel_expand">Развернуть панель</string>
+    <string name="panel_expand_watch_update">Обновите часы · развернуть</string>
+    <string name="watch_connected">Часы подключены</string>
+    <string name="watch_disconnected_last">Часы не подключены · последняя связь %1$s</string>
+    <string name="watch_never_connected">Связи с часами ещё не было</string>
+    <string name="watch_version_unknown">Часы: версия неизвестна. Откройте handyPVZ на часах.</string>
+    <string name="watch_version_legacy">Часы: требуется обновление · проверено %1$s</string>
+    <string name="watch_version_update">Часы: требуется обновление (%1$s → %2$s) · проверено %3$s</string>
+    <string name="watch_version_current">Часы: обновление не требуется (%1$s) · проверено %2$s</string>
     <string name="btn_logout">Выйти из профиля OZON</string>
+    <string name="btn_logout_wb">Выйти из профиля WB</string>
+    <string name="logout_wb_title">Выйти из профиля WB?</string>
+    <string name="logout_wb_message">Сессия WB будет очищена, потребуется войти заново.</string>
+    <string name="wb_ready">QR-код WB получен</string>
+    <string name="wb_no_code">Войдите в WB и нажмите «Обновить»</string>
+    <string name="wb_fetch_failed">Не удалось получить QR. Проверьте страницу доставок и подключение.</string>
+    <string name="wb_network_error">Не удалось открыть страницу WB. Проверьте подключение.</string>
+    <string name="wb_session_cleared">Сессия WB очищена. Войдите заново</string>
+    <string name="wb_login_note">Вход выполняется на странице WB выше.</string>
     <string name="logout_dialog_title">Выйти из профиля OZON?</string>
     <string name="logout_dialog_message">Сессия Ozon будет очищена, потребуется войти заново. Само приложение не закроется.</string>
     <string name="logout_dialog_confirm">Выйти</string>
     <string name="logout_dialog_cancel">Отмена</string>
     <string name="status_session_cleared">Сессия очищена. Войдите в Ozon заново</string>
-    <string name="notif_access_desc">Чтобы узнавать о поступлении посылки, разрешите handyPVZ читать уведомления Ozon.</string>
+    <string name="notif_access_desc"><![CDATA[Чтобы узнавать о поступлении посылки, разрешите handyPVZ читать уведомления Ozon. Как это работает и почему это безопасно — <a href="https://github.com/timsoid/handyPVZ#уведомления-что-именно-видит-приложение">в описании на GitHub</a>.]]></string>
     <string name="notif_access_btn">Разрешить доступ к уведомлениям</string>
     <string name="status_refreshing">Обновляю…</string>
     <string name="result_missing">Код не найден. Войдите в Ozon и нажмите «Обновить»</string>
-    <string name="status_no_code">Кода нет — войдите в Ozon и нажмите «Обновить»</string>
+    <string name="status_no_code">Код пока не получен — проверьте страницу Ozon и нажмите «Обновить»</string>
+    <string name="status_code_unavailable">Не удалось получить код. Проверьте страницу Ozon и нажмите «Обновить»</string>
     <string name="status_code">Код: %1$s · от %2$s</string>
     <string name="status_stale"> · УСТАРЕЛ</string>
     <string name="notif_channel">Проблемы handyPVZ</string>
@@ -59,10 +79,11 @@
     <string name="watch_error_port">Порт подключения указан неверно.</string>
     <string name="watch_error_unexpected">Что-то пошло не так: %1$s</string>
     <string name="watch_footer"><![CDATA[Если не получилось установить этим способом, заходите в нашу <a href="https://t.me/+jZOjtFSWPWpiODYy">Telegram-группу</a>: там есть альтернативная инструкция.]]></string>
-    <string name="status_login_required">Войдите в профиль Ozon, чтобы увидеть посылки для выдачи</string>
+    <string name="status_login_required">Войдите в профиль Ozon по номеру телефона или почте, чтобы увидеть посылки для выдачи</string>
     <string name="login_note">Мы не храним и не отправляем данные для входа: вы входите на обычной странице Ozon выше, как в браузере на телефоне.</string>
+    <string name="login_warning">Важно: не нажимайте «Войти через приложение» — входите по номеру телефона или почте и коду из SMS или из приложения.</string>
     <string name="help_how_title">Как это работает</string>
-    <string name="help_how_text">Войдите в Ozon прямо в приложении. Когда посылка готова к выдаче, приложение находит в заказах код получения и превращает его в штрихкод, а затем отправляет на часы с Wear OS: покажите их на пункте выдачи.\n\nКод обновляется по уведомлению от Ozon, по кнопке «Обновить» и при открытии приложения на часах. Он меняется каждый день в 00:00 МСК: если на часах отметка «УСТАРЕЛ», откройте приложение на часах или нажмите «Обновить».</string>
+    <string name="help_how_text">Войдите в профиль Ozon прямо в приложении. Когда посылка готова к выдаче, нажмите «Обновить»: приложение отправит код на часы с Wear OS.\n\nКод обновляется по уведомлению и по запросу часов. Он меняется каждый день в 00:00 МСК: если на часах отметка «УСТАРЕЛ», откройте приложение на часах или нажмите «Обновить».</string>
     <string name="help_important_title">Важно: уведомления Ozon</string>
     <string name="help_important_text">В приложении Ozon должны быть включены уведомления о новых посылках. Тогда handyPVZ сам подхватит код, как только посылка придёт. Так сделано намеренно: приложение не опрашивает Ozon постоянно в фоне, ведь такая активность выглядит подозрительно, и Ozon может закрыть вашу сессию.</string>
     <string name="help_privacy_title">Ваши данные</string>
@@ -70,4 +91,6 @@
     <string name="help_link_github">GitHub</string>
     <string name="help_link_telegram">Telegram</string>
     <string name="help_links_caption">GitHub: новые версии. Telegram: вопросы, баги и предложения.</string>
+    <string name="help_version">Версия %1$s</string>
+    <string name="update_available">Доступна новая версия %1$s — нажмите, чтобы скачать</string>
 </resources>

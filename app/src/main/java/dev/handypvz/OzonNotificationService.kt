@@ -17,7 +17,7 @@ class OzonNotificationService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (!isOzonPackage(sbn.packageName)) return
-        Log.d(TAG, "ozon notification: ${sbn.packageName} '${sbn.notification?.extras?.getCharSequence("android.title")}'")
+        Log.d(TAG, "ozon notification from ${sbn.packageName}")
         if (System.currentTimeMillis() - lastFetchMs < DEBOUNCE_MS) {
             Log.d(TAG, "debounced")
             return
@@ -34,11 +34,11 @@ class OzonNotificationService : NotificationListenerService() {
                 CodeStore.saveCode(applicationContext, result.code, today)
                 WearSync.push(applicationContext, result.code, today)
                 if (appeared) Notifier.orderReady(applicationContext)
-                Log.d(TAG, "fetched code on notification: ${result.code}")
+                Log.d(TAG, "fetched code on notification")
             }
-            is FetchResult.NotFound -> {
-                CodeStore.clearOrder(applicationContext)
-                Log.d(TAG, "no code on notification")
+            is FetchResult.CodeUnavailable -> {
+                if (CodeStore.markOzonUnavailable(applicationContext)) WearSync.pushSnapshot(applicationContext)
+                Log.d(TAG, "code unavailable on notification")
             }
             is FetchResult.SessionExpired -> {
                 Notifier.sessionExpired(applicationContext)

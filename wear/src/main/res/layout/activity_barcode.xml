@@ -5,6 +5,7 @@
     android:background="@color/bg_dark">
 
     <ImageView
+        android:id="@+id/backgroundImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:importantForAccessibility="no"
@@ -27,7 +28,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|center_horizontal"
-        android:contentDescription="@string/app_name" />
+        android:contentDescription="@string/app_name"
+        android:scaleType="center" />
 
     <TextView
         android:id="@+id/codeText"
@@ -52,11 +54,23 @@
         android:id="@+id/messageText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="top|center_horizontal"
         android:gravity="center"
         android:paddingStart="40dp"
         android:paddingEnd="40dp"
         android:textColor="@color/text_primary"
         android:textSize="14sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/contactText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:gravity="center"
+        android:paddingStart="40dp"
+        android:paddingEnd="40dp"
+        android:textColor="@color/text_muted"
+        android:textSize="10sp"
         android:visibility="gone" />
 </FrameLayout>

@@ -12,11 +12,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.gms.tasks.Tasks
 import com.google.android.gms.wearable.Wearable
+import com.google.android.gms.wearable.CapabilityClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -28,10 +30,22 @@ class BarcodeActivity : Activity() {
     private lateinit var codeText: TextView
     private lateinit var statusText: TextView
     private lateinit var messageText: TextView
+    private lateinit var contactText: TextView
+    private lateinit var backgroundImage: ImageView
+    private var currentSnapshot: WearSnapshot? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var job: Job? = null
     private var lastRequestMs = 0L
+    private var lastOzonRequestMs = 0L
     private val handler = Handler(Looper.getMainLooper())
+    private val reconnectRequest = Runnable { requestRefresh() }
+    private val capabilityListener = CapabilityClient.OnCapabilityChangedListener { capability ->
+        if (capability.nodes.isNotEmpty()) {
+            handler.removeCallbacks(reconnectRequest)
+            val wait = (REQUEST_INTERVAL_MS - (System.currentTimeMillis() - lastRequestMs)).coerceAtLeast(0)
+            handler.postDelayed(reconnectRequest, wait)
+        }
+    }
     private val releaseAwake = Runnable {
         Log.d(TAG, "keep-awake window over, screen may lock now")
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -46,6 +60,8 @@ class BarcodeActivity : Activity() {
         codeText = findViewById(R.id.codeText)
         statusText = findViewById(R.id.statusText)
         messageText = findViewById(R.id.messageText)
+        contactText = findViewById(R.id.contactText)
+        backgroundImage = findViewById(R.id.backgroundImage)
 
         // Позиции заданы долями высоты экрана, чтобы не зависеть от конкретного разрешения.
         val height = resources.displayMetrics.heightPixels
@@ -53,6 +69,8 @@ class BarcodeActivity : Activity() {
         place(cardImage, CARD_TOP, height)
         place(codeText, CODE_TOP, height)
         place(statusText, STATUS_TOP, height)
+        place(messageText, 0.36f, height)
+        place(contactText, 0.60f, height)
     }
 
     /** Максимальная яркость и «не гасить экран» ровно на KEEP_AWAKE_MS, потом часы блокируются как обычно. */
@@ -73,10 +91,63 @@ class BarcodeActivity : Activity() {
     override fun onResume() {
         super.onResume()
         keepAwakeFor60Seconds()
+        Wearable.getCapabilityClient(applicationContext).addListener(capabilityListener, PHONE_CAPABILITY)
+        requestRefresh()
         job?.cancel()
         job = scope.launch {
-            WearCodeStore.getFlow(applicationContext).collect { stored -> render(stored) }
+            WearCodeStore.snapshotFlow(applicationContext).collect { snapshot -> renderSnapshot(snapshot) }
         }
+    }
+
+    private fun renderSnapshot(snapshot: WearSnapshot) {
+        currentSnapshot = snapshot
+        val ozon = snapshot.ozon?.takeIf { snapshot.ozonState == "ready" }
+        labelText.text = "Ozon"
+        val updateRequired = (snapshot.requiredWearVersionCode ?: 0) > BuildConfig.VERSION_CODE
+        if (updateRequired) labelText.append(" · ${getString(R.string.wear_update_needed)}")
+        labelText.setTextColor(getColor(if (updateRequired) R.color.status_warn else R.color.text_muted))
+        labelText.contentDescription = labelText.text
+        backgroundImage.setImageResource(R.drawable.bg_barcode)
+        if (ozon != null) {
+            render(ozon)
+        } else {
+            showMessage(getString(if (snapshot.ozonState == "no_order") R.string.wear_no_orders else R.string.wear_no_code))
+            contactText.text = snapshot.lastPhoneContact?.let {
+                val date = java.time.Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault())
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yy 'в' HH:mm"))
+                getString(R.string.wear_phone_last_contact, date)
+            } ?: getString(R.string.wear_phone_no_contact)
+            contactText.visibility = View.VISIBLE
+            if (snapshot.ozonState == "unknown") requestRefresh(true)
+        }
+    }
+
+    private fun showWb(wb: WearStoredWbCode) {
+        val metrics = resources.displayMetrics
+        val size = (minOf(metrics.widthPixels, metrics.heightPixels) * 0.60f).toInt()
+        val bitmap = QrRenderer.render(wb.qrData, size)
+        if (bitmap == null) {
+            showMessage(getString(R.string.wear_qr_error))
+            return
+        }
+        place(cardImage, 0.21f, metrics.heightPixels)
+        place(statusText, 0.84f, metrics.heightPixels)
+        cardImage.setImageBitmap(bitmap)
+        cardImage.visibility = View.VISIBLE
+        labelText.visibility = View.VISIBLE
+        codeText.visibility = View.GONE
+        statusText.visibility = View.VISIBLE
+        messageText.visibility = View.GONE
+        contactText.visibility = View.GONE
+        val expired = wb.expiresAt != null && wb.expiresAt <= System.currentTimeMillis()
+        statusText.text = when {
+            expired -> getString(R.string.wear_wb_expired)
+            wb.expiresAt == null -> getString(R.string.wear_wb_unknown_expiry)
+            else -> getString(R.string.wear_wb_expiry,
+                java.time.Instant.ofEpochMilli(wb.expiresAt).atZone(MSK)
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")))
+        }
+        statusText.setTextColor(getColor(if (expired || wb.expiresAt == null) R.color.status_warn else R.color.status_ok))
     }
 
     private fun render(stored: WearStoredCode?) {
@@ -85,20 +156,20 @@ class BarcodeActivity : Activity() {
             stored == null -> {
                 Log.d(TAG, "render: no stored code")
                 showMessage(getString(R.string.wear_no_code))
-                requestRefresh()
+                requestRefresh(true)
             }
             stored.code == NO_CODE -> {
                 Log.d(TAG, "render: no-code marker")
                 showMessage(getString(R.string.wear_no_orders))
-                if (stored.epochDay != today) requestRefresh()
+                if (stored.epochDay != today) requestRefresh(true)
             }
             stored.epochDay != today -> {
-                Log.d(TAG, "render: stale code=${stored.code}")
+                Log.d(TAG, "render: stale Ozon code")
                 showCode(stored, stale = true)
-                requestRefresh()
+                requestRefresh(true)
             }
             else -> {
-                Log.d(TAG, "render: fresh code=${stored.code}")
+                Log.d(TAG, "render: fresh Ozon code")
                 showCode(stored, stale = false)
             }
         }
@@ -110,6 +181,7 @@ class BarcodeActivity : Activity() {
         codeText.visibility = View.GONE
         statusText.visibility = View.GONE
         messageText.visibility = View.VISIBLE
+        contactText.visibility = View.GONE
         messageText.text = text
     }
 
@@ -117,6 +189,8 @@ class BarcodeActivity : Activity() {
         val metrics = resources.displayMetrics
         val screenWidth = metrics.widthPixels
         val screenHeight = metrics.heightPixels
+        place(cardImage, CARD_TOP, screenHeight)
+        place(statusText, STATUS_TOP, screenHeight)
 
         val cardWidth = (screenWidth * CARD_WIDTH).toInt()
         val cardHeight = (screenHeight * CARD_HEIGHT).toInt()
@@ -131,7 +205,7 @@ class BarcodeActivity : Activity() {
 
         val date = LocalDate.ofEpochDay(stored.epochDay)
             .format(DateTimeFormatter.ofPattern("dd.MM.yyyy"))
-        codeText.text = formatCode(stored.code)
+        codeText.text = OzonBarcode.format(stored.code)
         statusText.text = if (stale) "$date · ${getString(R.string.wear_stale)}" else date
         statusText.setTextColor(getColor(if (stale) R.color.status_warn else R.color.status_ok))
 
@@ -140,37 +214,50 @@ class BarcodeActivity : Activity() {
         codeText.visibility = View.VISIBLE
         statusText.visibility = View.VISIBLE
         messageText.visibility = View.GONE
+        contactText.visibility = View.GONE
     }
 
-    private fun formatCode(code: String): String =
-        CODE_FORMAT.matchEntire(code)?.destructured?.let { (a, b, c) -> "$a $b * $c" } ?: code
-
-    private fun requestRefresh() {
-        if (System.currentTimeMillis() - lastRequestMs < REQUEST_INTERVAL_MS) return
-        lastRequestMs = System.currentTimeMillis()
+    private fun requestRefresh(refreshOzon: Boolean = false) {
+        val now = System.currentTimeMillis()
+        val last = if (refreshOzon) lastOzonRequestMs else lastRequestMs
+        if (now - last < REQUEST_INTERVAL_MS) return
+        if (refreshOzon) lastOzonRequestMs = now else lastRequestMs = now
         Log.d(TAG, "requestRefresh: sending to phone")
-        Thread {
-            try {
-                val nodes = Tasks.await(Wearable.getNodeClient(applicationContext).connectedNodes)
-                if (nodes.isEmpty()) {
-                    Log.d(TAG, "requestRefresh: no phone connected")
-                    return@Thread
+        scope.launch {
+            val nonce = java.util.UUID.randomUUID().toString()
+            WearCodeStore.registerRequest(applicationContext, nonce)
+            val payload = JSONObject().put("version", 2).put("nonce", nonce)
+                .put("refreshOzon", refreshOzon)
+                .put("watchVersionCode", BuildConfig.VERSION_CODE)
+                .put("watchVersionName", BuildConfig.VERSION_NAME)
+                .toString().toByteArray(Charsets.UTF_8)
+            Thread {
+                try {
+                    val nodes = Tasks.await(Wearable.getNodeClient(applicationContext).connectedNodes)
+                    if (nodes.isEmpty()) {
+                        Log.d(TAG, "requestRefresh: no phone connected")
+                        return@Thread
+                    }
+                    for (node in nodes) {
+                        Wearable.getMessageClient(applicationContext)
+                            .sendMessage(node.id, REQUEST_PATH, payload)
+                            .addOnSuccessListener { Log.d(TAG, "request sent to ${node.id}") }
+                            .addOnFailureListener { Log.d(TAG, "request failed: $it") }
+                    }
+                } catch (e: Exception) {
+                    Log.d(TAG, "requestRefresh failed: $e")
                 }
-                for (node in nodes) {
-                    Wearable.getMessageClient(applicationContext)
-                        .sendMessage(node.id, REQUEST_PATH, ByteArray(0))
-                        .addOnSuccessListener { Log.d(TAG, "request sent to ${node.id}") }
-                        .addOnFailureListener { Log.d(TAG, "request failed: $it") }
-                }
-            } catch (e: Exception) {
-                Log.d(TAG, "requestRefresh failed: $e")
-            }
-        }.start()
+            }.start()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(releaseAwake)
+        handler.removeCallbacks(reconnectRequest)
+        Wearable.getCapabilityClient(applicationContext).removeListener(capabilityListener, PHONE_CAPABILITY)
+        job?.cancel()
+        job = null
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
@@ -184,12 +271,11 @@ class BarcodeActivity : Activity() {
     companion object {
         private const val TAG = "BarcodeActivity"
         private const val REQUEST_PATH = "/request_code"
+        private const val PHONE_CAPABILITY = "handypvz_phone"
         private const val NO_CODE = "__NO_CODE__"
         private const val REQUEST_INTERVAL_MS = 10_000L
         private const val KEEP_AWAKE_MS = 60_000L
         private val MSK: ZoneId = ZoneId.of("Europe/Moscow")
-        private val CODE_FORMAT = Regex("""(\d{4})(\d{4})\*(\d{4})""")
-
         // Геометрия в долях экрана (эталон 480x480): карточка 441x136, радиус ~20.
         // Центр карточки (0.5H) совпадает с тёмной полосой между яркими линиями фона (0.341H и 0.658H).
         private const val CARD_WIDTH = 0.92f

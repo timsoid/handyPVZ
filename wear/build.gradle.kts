@@ -10,12 +10,14 @@ android {
         version = release(36)
     }
 
+    buildFeatures { buildConfig = true }
+
     defaultConfig {
         applicationId = "dev.handypvz"
         minSdk = 30
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = libs.versions.wearAppCode.get().toInt()
+        versionName = libs.versions.wearAppName.get()
         // Real devices only (phones and watches are ARM): drops x86 emulator native libs
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
@@ -58,4 +60,5 @@ dependencies {
     implementation(libs.zxing.core)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
+    testImplementation(libs.junit)
 }

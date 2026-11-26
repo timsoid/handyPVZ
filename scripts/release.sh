@@ -10,8 +10,6 @@ cd "$(dirname "$0")/.."
 [ -n "${JAVA_HOME:-}" ] || export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 
 VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | head -1)
-WEAR_VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' wear/build.gradle.kts | head -1)
-[ "$VERSION" = "$WEAR_VERSION" ] || { echo "versionName differs: app=$VERSION wear=$WEAR_VERSION" >&2; exit 1; }
 TAG="v$VERSION"
 
 ./gradlew clean :app:assembleRelease

@@ -28,6 +28,21 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".WbActivity"
+            android:exported="false"
+            android:process=":wb"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <service
+            android:name=".WbBridgeService"
+            android:exported="false" />
+
+        <provider
+            android:name=".UiStateProvider"
+            android:authorities="${applicationId}.ui-state"
+            android:exported="false" />
+
         <service
             android:name=".PhoneMessageService"
             android:exported="true">

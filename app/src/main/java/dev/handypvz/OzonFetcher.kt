@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 sealed class FetchResult {
     data class Success(val code: String) : FetchResult()
     object SessionExpired : FetchResult()
-    object NotFound : FetchResult()
+    object CodeUnavailable : FetchResult()
     object NetworkError : FetchResult()
 }
 
@@ -28,8 +28,7 @@ class OzonFetcher(private val context: Context) {
 
     suspend fun fetch(): FetchResult {
         val result = withTimeoutOrNull(FETCH_TIMEOUT_MS) { fetchInternal() } ?: FetchResult.NetworkError
-        // An anonymous Ozon session has no orders: report it as "not logged in", not "no parcels"
-        if (result is FetchResult.NotFound && !OzonAuth.isLoggedIn()) return FetchResult.SessionExpired
+        if (result is FetchResult.CodeUnavailable && !OzonAuth.isLoggedIn()) return FetchResult.SessionExpired
         return result
     }
 
@@ -44,7 +43,6 @@ class OzonFetcher(private val context: Context) {
 
             val mainHandler = Handler(Looper.getMainLooper())
             val finished = AtomicBoolean(false)
-            var loginSeen = false
 
             fun destroyOnMain() {
                 if (!finished.compareAndSet(false, true)) return
@@ -56,7 +54,7 @@ class OzonFetcher(private val context: Context) {
 
             fun finish(result: FetchResult) {
                 if (!finished.compareAndSet(false, true)) return
-                Log.d(TAG, "finish result=$result")
+                Log.d(TAG, "fetch completed: ${result.javaClass.simpleName}")
                 webView.stopLoading()
                 webView.destroy()
                 if (cont.isActive) cont.resume(result)
@@ -91,17 +89,14 @@ class OzonFetcher(private val context: Context) {
                         when (val extract = OzonCodeExtractor.parse(raw)) {
                             is OzonCodeExtractor.Extract.Code ->
                                 finish(FetchResult.Success(extract.value))
-                            OzonCodeExtractor.Extract.Login -> loginSeen = true
+                            OzonCodeExtractor.Extract.Login -> Unit
                             OzonCodeExtractor.Extract.None -> Unit
                         }
                     }
                     if (isLast) {
                         mainHandler.postDelayed({
                             if (!finished.get()) {
-                                finish(
-                                    if (loginSeen) FetchResult.SessionExpired
-                                    else FetchResult.NotFound
-                                )
+                                finish(FetchResult.CodeUnavailable)
                             }
                         }, GRACE_MS)
                     } else {

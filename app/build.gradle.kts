@@ -66,10 +66,12 @@ android {
     defaultConfig {
         applicationId = "dev.handypvz"
         buildConfigField("String", "APPMETRICA_API_KEY", "\"$appMetricaKey\"")
+        buildConfigField("int", "REQUIRED_WEAR_VERSION_CODE", libs.versions.wearAppCode.get())
+        buildConfigField("String", "REQUIRED_WEAR_VERSION_NAME", "\"${libs.versions.wearAppName.get()}\"")
         minSdk = 30
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
         // Real devices only (phones and watches are ARM): drops x86 emulator native libs
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
@@ -115,9 +117,11 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.play.services.wearable)
+    implementation(libs.zxing.core)
     implementation(libs.appmetrica) // Yandex AppMetrica analytics
     // ADB over Wi-Fi (TLS pairing + connect) used to install the :wear APK on the watch
     implementation(libs.libadb.android)
     implementation(libs.sun.security.android) // X.509 certificate generation for the ADB TLS key
     implementation(libs.conscrypt.android) // TLSv1.3 + exportKeyingMaterial for pairing
+    testImplementation(libs.junit)
 }

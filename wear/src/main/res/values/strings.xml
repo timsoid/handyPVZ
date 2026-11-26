@@ -4,4 +4,12 @@
     <string name="wear_no_code">Нет кода. Откройте handyPVZ на телефоне</string>
     <string name="wear_no_orders">Нет посылок для выдачи</string>
     <string name="wear_stale">УСТАРЕЛ</string>
+    <string name="wear_wb_unknown_expiry">Срок действия неизвестен</string>
+    <string name="wear_wb_expired">Срок действия истёк</string>
+    <string name="wear_wb_expiry">До %1$s</string>
+    <string name="wear_switch_hint">Нажмите, чтобы переключить маркетплейс</string>
+    <string name="wear_qr_error">Не удалось показать QR-код</string>
+    <string name="wear_phone_last_contact">Связь со смартфоном была\n%1$s</string>
+    <string name="wear_phone_no_contact">Связи со смартфоном ещё не было</string>
+    <string name="wear_update_needed">ОБНОВИТЕ ЧАСЫ</string>
 </resources>

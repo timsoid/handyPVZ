@@ -13,6 +13,9 @@ appmetrica = "8.6.0"
 libadb = "3.1.1"
 sunSecurity = "1.1"
 conscrypt = "2.5.3"
+junit = "4.13.2"
+wearAppCode = "5"
+wearAppName = "1.0.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +31,7 @@ sun-security-android = { group = "com.github.MuntashirAkon", name = "sun-securit
 conscrypt-android = { group = "org.conscrypt", name = "conscrypt-android", version.ref = "conscrypt" }
 appmetrica = { group = "io.appmetrica.analytics", name = "analytics", version.ref = "appmetrica" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

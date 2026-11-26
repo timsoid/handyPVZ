@@ -32,6 +32,17 @@
             android:textSize="13sp" />
 
         <TextView
+            android:id="@+id/watchVersionInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_status_badge"
+            android:padding="12dp"
+            android:text="@string/watch_version_unknown"
+            android:textColor="@color/on_surface_variant"
+            android:textSize="14sp" />
+
+        <TextView
             android:id="@+id/watchSteps"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

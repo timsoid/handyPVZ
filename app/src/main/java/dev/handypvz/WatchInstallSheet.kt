@@ -39,6 +39,7 @@ class WatchInstallSheet(private val activity: AppCompatActivity) {
     private val status = view.findViewById<TextView>(R.id.watchStatus)
     private val progress = view.findViewById<LinearProgressIndicator>(R.id.watchProgress)
     private val button = view.findViewById<MaterialButton>(R.id.watchInstallButton)
+    private val versionView = WatchVersionStatusView(activity, view.findViewById(R.id.watchVersionInfo))
 
     private val installer = WatchInstaller(activity)
     private val discovery = AdbDiscovery(activity)
@@ -53,6 +54,8 @@ class WatchInstallSheet(private val activity: AppCompatActivity) {
     private var pairedCode: String? = null
 
     fun show() {
+        versionView.start()
+        WearSync.requestWatchVersion(activity)
         dialog.setContentView(view)
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         dialog.behavior.apply {
@@ -97,11 +100,11 @@ class WatchInstallSheet(private val activity: AppCompatActivity) {
             }
         }
         dialog.setOnDismissListener {
+            versionView.stop()
             handle.stop()
             job?.cancel()
         }
         dialog.show()
-        codeInput.requestFocus()
     }
 
     private fun clearErrorWatcher(layout: TextInputLayout) = object : TextWatcher {
@@ -178,6 +181,7 @@ class WatchInstallSheet(private val activity: AppCompatActivity) {
                 if (step.percent > 0) progress.setProgressCompat(step.percent, true)
             }
             WatchInstaller.Step.Done -> {
+                WearSync.requestWatchVersion(activity)
                 finished = true
                 progress.visibility = View.GONE
                 status.visibility = View.VISIBLE

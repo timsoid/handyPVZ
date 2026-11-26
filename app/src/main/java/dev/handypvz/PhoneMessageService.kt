@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -15,8 +16,37 @@ class PhoneMessageService : WearableListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.path == VERSION_PATH) {
+            if (messageEvent.data.size > 512) return
+            try {
+                val json = JSONObject(String(messageEvent.data, Charsets.UTF_8))
+                val code = json.getInt("versionCode")
+                val name = json.optString("versionName").take(50)
+                if (code > 0) UiStateProvider.record(applicationContext, messageEvent.sourceNodeId, code, name)
+            } catch (_: Exception) { }
+            return
+        }
         if (messageEvent.path != REQUEST_PATH) return
         Log.d(TAG, "request received from watch")
+        val request = try {
+            if (messageEvent.data.size > 256) null else {
+                val json = JSONObject(String(messageEvent.data, Charsets.UTF_8))
+                if (json.optInt("version") != 2) null
+                else {
+                    val code = json.optInt("watchVersionCode", 0)
+                    UiStateProvider.record(applicationContext, messageEvent.sourceNodeId, code.coerceAtLeast(0),
+                        json.optString("watchVersionName").take(50))
+                    java.util.UUID.fromString(json.getString("nonce")).toString() to
+                        json.optBoolean("refreshOzon", false)
+                }
+            }
+        } catch (_: Exception) { null }
+        if (request == null && messageEvent.data.isEmpty()) {
+            UiStateProvider.record(applicationContext, messageEvent.sourceNodeId, 0)
+        }
+        WearSync.pushSnapshot(applicationContext, request?.first, messageEvent.sourceNodeId)
+        // Legacy requests ask for an Ozon fetch. V2 may request only the saved snapshot.
+        if (request != null && !request.second) return
         scope.launch {
             val today = LocalDate.now(MSK).toEpochDay()
             when (val result = OzonFetcher(applicationContext).fetch()) {
@@ -25,15 +55,14 @@ class PhoneMessageService : WearableListenerService() {
                     CodeStore.saveCode(applicationContext, result.code, today)
                     WearSync.push(applicationContext, result.code, today)
                 }
-                is FetchResult.NotFound -> {
-                    Log.d(TAG, "watch request: no orders")
-                    CodeStore.clearOrder(applicationContext)
-                    WearSync.pushNoCode(applicationContext)
+                is FetchResult.CodeUnavailable -> {
+                    Log.d(TAG, "watch request: code unavailable")
+                    if (CodeStore.markOzonUnavailable(applicationContext)) WearSync.pushSnapshot(applicationContext)
                 }
                 is FetchResult.SessionExpired -> {
                     Log.d(TAG, "watch request: session expired")
                     Notifier.sessionExpired(applicationContext)
-                    WearSync.pushNoCode(applicationContext)
+                    WearSync.pushSnapshot(applicationContext)
                 }
                 is FetchResult.NetworkError -> {
                     Log.d(TAG, "watch request: network error")
@@ -45,6 +74,7 @@ class PhoneMessageService : WearableListenerService() {
     companion object {
         private const val TAG = "PhoneMessageService"
         private const val REQUEST_PATH = "/request_code"
+        private const val VERSION_PATH = "/watch_version"
         private val MSK: ZoneId = ZoneId.of("Europe/Moscow")
     }
 }
