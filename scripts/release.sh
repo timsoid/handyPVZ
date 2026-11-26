@@ -20,8 +20,9 @@ cp app/build/outputs/apk/release/app-release.apk "$OUT/handyPVZ-$VERSION.apk"
 cp wear/build/outputs/apk/release/wear-release.apk "$OUT/handyPVZ-wear-$VERSION.apk"
 
 # Both APKs must be signed with the same key, and the one embedded in the phone APK must match
-BT=$(ls "$ANDROID_HOME/build-tools" 2>/dev/null || ls "$HOME/Library/Android/sdk/build-tools")
-APKSIGNER="${ANDROID_HOME:-$HOME/Library/Android/sdk}/build-tools/$(echo "$BT" | sort -V | tail -1)/apksigner"
+SDK="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
+BT=$(ls "$SDK/build-tools" 2>/dev/null || { echo "Android SDK build-tools not found under $SDK" >&2; exit 1; })
+APKSIGNER="$SDK/build-tools/$(echo "$BT" | sort -V | tail -1)/apksigner"
 cert() { "$APKSIGNER" verify --print-certs "$1" | sed -n 's/.*SHA-256 digest: //p' | head -1; }
 unzip -p "$OUT/handyPVZ-$VERSION.apk" assets/wear_app.apk > "$OUT/embedded-wear.apk"
 [ "$(cert "$OUT/handyPVZ-$VERSION.apk")" = "$(cert "$OUT/handyPVZ-wear-$VERSION.apk")" ] || { echo "phone/wear signing keys differ" >&2; exit 1; }
