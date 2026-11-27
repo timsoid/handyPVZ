@@ -133,6 +133,20 @@ object CodeStore {
         return changed
     }
 
+    /** Confirmed absence of a pickup order: mark it and tell the watch "no order". */
+    suspend fun markNoOrder(context: Context): Boolean {
+        var changed = false
+        context.dataStore.edit {
+            if (it[KEY_OZON_STATE] != "no_order" || it[KEY_HAS_ORDER] != false) {
+                it[KEY_HAS_ORDER] = false
+                it[KEY_OZON_STATE] = "no_order"
+                it[KEY_REVISION] = (it[KEY_REVISION] ?: 0) + 1
+                changed = true
+            }
+        }
+        return changed
+    }
+
     suspend fun saveWb(context: Context, qrData: String, expiresAt: Long? = null) {
         require(qrData.isNotEmpty())
         context.dataStore.edit {

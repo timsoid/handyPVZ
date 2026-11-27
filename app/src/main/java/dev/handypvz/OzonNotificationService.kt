@@ -36,6 +36,10 @@ class OzonNotificationService : NotificationListenerService() {
                 if (appeared) Notifier.orderReady(applicationContext)
                 Log.d(TAG, "fetched code on notification")
             }
+            is FetchResult.NoOrder -> {
+                if (CodeStore.markNoOrder(applicationContext)) WearSync.pushNoCode(applicationContext)
+                Log.d(TAG, "no order to pick up on notification")
+            }
             is FetchResult.CodeUnavailable -> {
                 if (CodeStore.markOzonUnavailable(applicationContext)) WearSync.pushSnapshot(applicationContext)
                 Log.d(TAG, "code unavailable on notification")

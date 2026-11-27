@@ -55,6 +55,10 @@ class PhoneMessageService : WearableListenerService() {
                     CodeStore.saveCode(applicationContext, result.code, today)
                     WearSync.push(applicationContext, result.code, today)
                 }
+                is FetchResult.NoOrder -> {
+                    Log.d(TAG, "watch request: no order to pick up")
+                    if (CodeStore.markNoOrder(applicationContext)) WearSync.pushNoCode(applicationContext)
+                }
                 is FetchResult.CodeUnavailable -> {
                     Log.d(TAG, "watch request: code unavailable")
                     if (CodeStore.markOzonUnavailable(applicationContext)) WearSync.pushSnapshot(applicationContext)

@@ -46,7 +46,7 @@
     <string name="notif_fail_text">Открой приложение и проверь</string>
     <string name="notif_order_title">Заказ в ПВЗ</string>
     <string name="notif_order_text">Штрих-код получен</string>
-    <string name="status_no_orders">На данный момент нет посылок для выдачи</string>
+    <string name="status_no_orders">Вижу заказы, но сейчас нечего забирать</string>
     <string name="battery_desc">Разрешите фоновую работу, чтобы приложение само следило за заказом и отправляло код на часы. Проверки редкие и почти не расходуют батарею.</string>
     <string name="battery_btn">Разрешить фоновую работу</string>
     <string name="btn_donate">Поддержать проект</string>

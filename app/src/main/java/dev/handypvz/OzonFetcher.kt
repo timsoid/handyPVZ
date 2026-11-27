@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 sealed class FetchResult {
     data class Success(val code: String) : FetchResult()
     object SessionExpired : FetchResult()
+    object NoOrder : FetchResult()
     object CodeUnavailable : FetchResult()
     object NetworkError : FetchResult()
 }
@@ -28,7 +29,9 @@ class OzonFetcher(private val context: Context) {
 
     suspend fun fetch(): FetchResult {
         val result = withTimeoutOrNull(FETCH_TIMEOUT_MS) { fetchInternal() } ?: FetchResult.NetworkError
-        if (result is FetchResult.CodeUnavailable && !OzonAuth.isLoggedIn()) return FetchResult.SessionExpired
+        if ((result is FetchResult.CodeUnavailable || result is FetchResult.NoOrder) && !OzonAuth.isLoggedIn()) {
+            return FetchResult.SessionExpired
+        }
         return result
     }
 
@@ -43,6 +46,9 @@ class OzonFetcher(private val context: Context) {
 
             val mainHandler = Handler(Looper.getMainLooper())
             val finished = AtomicBoolean(false)
+            var pageFinished = false
+            var loginSeen = false
+            var challengeSeen = false
 
             fun destroyOnMain() {
                 if (!finished.compareAndSet(false, true)) return
@@ -61,6 +67,11 @@ class OzonFetcher(private val context: Context) {
             }
 
             webView.webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView, url: String) {
+                    Log.d(TAG, "onPageFinished: $url")
+                    pageFinished = true
+                }
+
                 override fun onReceivedError(
                     view: WebView,
                     request: WebResourceRequest,
@@ -69,6 +80,19 @@ class OzonFetcher(private val context: Context) {
                     Log.d(
                         TAG,
                         "onReceivedError code=${error.errorCode} desc=${error.description} " +
+                            "url=${request.url} main=${request.isForMainFrame}"
+                    )
+                    if (request.isForMainFrame) finish(FetchResult.NetworkError)
+                }
+
+                override fun onReceivedHttpError(
+                    view: WebView,
+                    request: WebResourceRequest,
+                    errorResponse: android.webkit.WebResourceResponse
+                ) {
+                    Log.d(
+                        TAG,
+                        "onReceivedHttpError status=${errorResponse.statusCode} " +
                             "url=${request.url} main=${request.isForMainFrame}"
                     )
                     if (request.isForMainFrame) finish(FetchResult.NetworkError)
@@ -89,14 +113,22 @@ class OzonFetcher(private val context: Context) {
                         when (val extract = OzonCodeExtractor.parse(raw)) {
                             is OzonCodeExtractor.Extract.Code ->
                                 finish(FetchResult.Success(extract.value))
-                            OzonCodeExtractor.Extract.Login -> Unit
+                            OzonCodeExtractor.Extract.Login -> loginSeen = true
+                            OzonCodeExtractor.Extract.Challenge -> challengeSeen = true
                             OzonCodeExtractor.Extract.None -> Unit
                         }
                     }
                     if (isLast) {
                         mainHandler.postDelayed({
                             if (!finished.get()) {
-                                finish(FetchResult.CodeUnavailable)
+                                finish(
+                                    when {
+                                        loginSeen -> FetchResult.SessionExpired
+                                        challengeSeen -> FetchResult.CodeUnavailable
+                                        pageFinished -> FetchResult.NoOrder
+                                        else -> FetchResult.CodeUnavailable
+                                    }
+                                )
                             }
                         }, GRACE_MS)
                     } else {

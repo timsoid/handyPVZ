@@ -29,4 +29,11 @@ class OzonCodeExtractorTest {
             OzonCodeExtractor.parse("1234567890*1234\n123456789*1234"))
         assertEquals(OzonCodeExtractor.Extract.Login, OzonCodeExtractor.parse("\"__LOGIN__\""))
     }
+
+    @Test
+    fun `distinguishes antibot challenge from login and none`() {
+        assertEquals(OzonCodeExtractor.Extract.Challenge, OzonCodeExtractor.parse("\"__CHALLENGE__\""))
+        assertEquals(OzonCodeExtractor.Extract.Login, OzonCodeExtractor.parse("\"__LOGIN__\""))
+        assertEquals(OzonCodeExtractor.Extract.None, OzonCodeExtractor.parse("\"\""))
+    }
 }

@@ -178,44 +178,63 @@ class MainActivity : AppCompatActivity() {
         updateBanner = findViewById(R.id.updateBanner)
         updateBanner.setOnClickListener { (updateBanner.tag as? String)?.let { Links.open(this, it) } }
 
-        refreshButton.setOnClickListener {
-            refreshing = true
-            setLoginRequired(false)
-            resultText.setTextColor(getColor(R.color.status_warn))
-            resultText.text = getString(R.string.status_refreshing)
-            lifecycleScope.launch {
-                val today = LocalDate.now(MSK).toEpochDay()
-                val result = OzonFetcher(this@MainActivity).fetch()
-                refreshing = false
-                when (result) {
-                    is FetchResult.Success -> {
-                        CodeStore.saveCode(this@MainActivity, result.code, today)
-                        WearSync.push(this@MainActivity, result.code, today)
-                        showState(StoredCode(result.code, today), hasOrder = true, loggedIn = true)
-                    }
-                    is FetchResult.CodeUnavailable -> {
-                        if (CodeStore.markOzonUnavailable(this@MainActivity)) WearSync.pushSnapshot(this@MainActivity)
-                        resultText.setTextColor(getColor(R.color.status_warn))
-                        resultText.text = getString(R.string.status_code_unavailable)
-                    }
-                    is FetchResult.SessionExpired -> {
-                        showLoginRequired()
-                        Notifier.sessionExpired(this@MainActivity)
-                    }
-                    else -> {
-                        resultText.setTextColor(getColor(R.color.status_err))
-                        resultText.text = getString(R.string.result_missing)
-                        Notifier.fetchFailed(this@MainActivity)
-                    }
+        refreshButton.setOnClickListener { refreshOzon(notify = true) }
+
+    }
+
+    private fun refreshOzon(notify: Boolean) {
+        refreshing = true
+        setLoginRequired(false)
+        resultText.setTextColor(getColor(R.color.status_warn))
+        resultText.text = getString(R.string.status_refreshing)
+        lifecycleScope.launch {
+            val today = LocalDate.now(MSK).toEpochDay()
+            val result = OzonFetcher(this@MainActivity).fetch()
+            refreshing = false
+            when (result) {
+                is FetchResult.Success -> {
+                    CodeStore.saveCode(this@MainActivity, result.code, today)
+                    WearSync.push(this@MainActivity, result.code, today)
+                    showState(StoredCode(result.code, today), hasOrder = true, loggedIn = true)
+                }
+                is FetchResult.NoOrder -> {
+                    if (CodeStore.markNoOrder(this@MainActivity)) WearSync.pushNoCode(this@MainActivity)
+                    resultText.setTextColor(getColor(R.color.status_idle))
+                    resultText.text = getString(R.string.status_no_orders)
+                }
+                is FetchResult.CodeUnavailable -> {
+                    if (CodeStore.markOzonUnavailable(this@MainActivity)) WearSync.pushSnapshot(this@MainActivity)
+                    resultText.setTextColor(getColor(R.color.status_warn))
+                    resultText.text = getString(R.string.status_code_unavailable)
+                }
+                is FetchResult.SessionExpired -> {
+                    showLoginRequired()
+                    if (notify) Notifier.sessionExpired(this@MainActivity)
+                }
+                else -> {
+                    resultText.setTextColor(getColor(R.color.status_err))
+                    resultText.text = getString(R.string.result_missing)
+                    if (notify) Notifier.fetchFailed(this@MainActivity)
                 }
             }
         }
+    }
 
+    private var lastAutoFetchMs = 0L
+
+    private fun maybeAutoFetch() {
+        if (!OzonAuth.isLoggedIn()) return
+        if (refreshing) return
+        val now = System.currentTimeMillis()
+        if (now - lastAutoFetchMs < AUTO_FETCH_COOLDOWN_MS) return
+        lastAutoFetchMs = now
+        refreshOzon(notify = false)
     }
 
     override fun onResume() {
         super.onResume()
         refreshStoredStatus()
+        maybeAutoFetch()
         updateBatteryUi()
         updateNotificationUi()
         panelController.sync()
@@ -402,6 +421,7 @@ class MainActivity : AppCompatActivity() {
         private const val GITHUB_URL = "https://github.com/timsoid/handyPVZ"
         private const val TELEGRAM_GROUP_URL = "https://t.me/+jZOjtFSWPWpiODYy"
         private const val DONATE_URL = "https://pay.cloudtips.ru/p/eabd1029"
+        private const val AUTO_FETCH_COOLDOWN_MS = 30_000L
         private val MSK: ZoneId = ZoneId.of("Europe/Moscow")
     }
 }

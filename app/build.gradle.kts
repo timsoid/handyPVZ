@@ -70,8 +70,8 @@ android {
         buildConfigField("String", "REQUIRED_WEAR_VERSION_NAME", "\"${libs.versions.wearAppName.get()}\"")
         minSdk = 30
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
         // Real devices only (phones and watches are ARM): drops x86 emulator native libs
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
