@@ -122,8 +122,6 @@ keyPassword=...
 
 > Если телефон и часы подключены по adb одновременно, **не запускайте `installDebug` без `ANDROID_SERIAL`**: у модулей одинаковый `applicationId`, и APK телефона окажется на часах.
 
-Подробное описание архитектуры — в [AGENTS.md](AGENTS.md).
-
 ## Поддержка и обратная связь
 
 - Вопросы, баги и предложения: [Telegram-группа](https://t.me/+jZOjtFSWPWpiODYy) или [Issues](https://github.com/timsoid/handyPVZ/issues).
