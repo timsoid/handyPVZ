@@ -52,9 +52,12 @@ hs_err_pid*
 
 # ---- Private notes & personal data ----
 # STATUS.md is a private working journal (device serials, LAN IPs, Ozon user id);
-# the public project description lives in AGENTS.md / README.md.
+# the public project description lives in README.md.
 STATUS.md
-# real watch screenshot contains a live pickup barcode with the owner's Ozon id
-design/watch_screen.png
+# AI-agent project guides stay local, never in public repos
+AGENTS.md
+CLAUDE.md
+# working design assets (screenshots, source images) are not part of the source
+design/
 # store-submission assets, not part of the source
 RuStore/
